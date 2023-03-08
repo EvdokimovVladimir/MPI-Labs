@@ -32,33 +32,6 @@
 Неблокирующие процедуры инициируют приём или передачу и сразу возвращают управление. Приём и передача происходит одновременно с основным кодом.  
 При работе с полученными или отправленными данными возможны ошибки. Актуальность не гарантируется. Для проверки статуса используются дополнительные процедуры `MPI_WAIT` `MPI_TEST`.
 
-```mermaid
-sequenceDiagram
-
-    box Отправитель
-        participant S as Процесс <br/> отправитель
-    end
-    
-    box Получатель
-        participant R as Процесс <br/> получатель
-    end
-
-    Note left of S: call MPI_ISEND
-    Note left of S: Продолжение<br/>выполнения<br/>кода
-    Note right of R: call MPI_IRECV
-    Note right of R: Продолжение<br/>выполнения<br/>кода
-
-    Note left of S: call MPI_TEST<br/>вернёт .FALSE.
-    Note right of R: call MPI_TEST<br/>вернёт .FALSE.
-
-    S -> R: Данные полностью<br/> отправлены
-    Note left of S: call MPI_TEST<br/>вернёт .TRUE.
-
-    S -> R: Данные полностью<br/> приняты
-    Note right of R: call MPI_TEST<br/>вернёт .TRUE.
-
-```
-
 ### Стандартная отправка
 Сообщение записываются в буфер приёма независимо от инициализации приёма. Факт приёма `MPI_RECV` не проверяется.
 
@@ -66,72 +39,10 @@ sequenceDiagram
 
 Если сообщение большое, то стандартная отправка ведёт себя как синхронная (`MPI_SSEND`).
 
-```mermaid
-sequenceDiagram
-
-    box Отправитель
-        participant S as Процесс <br/> отправитель
-    end
-    
-    box Получатель
-        participant B as Буфер на стороне<br/>получателя
-        participant R as Процесс <br/> получатель
-    end
-
-    Note left of S: call MPI_SEND
-    activate S
-    activate B
-    S -->> B: Отправка данных
-    S -> B: Данные полностью<br/>отправлены
-    deactivate S
-    Note left of S: Продолжение<br/>выполнения<br/>кода
-
-    Note right of R: Выполнение<br/>другого<br/>кода
-    Note right of R: call MPI_RECV
-    activate R
-    B -->> R: Получение данных <br/>из буфера
-    B -> R: Данные полностью<br/> приняты
-    deactivate R
-    deactivate B
-    Note right of R: Продолжение<br/>выполнения<br/>кода
-
-    
-```
-
 ### Синхронная отправка
 Процедура ждёт инициализации приёма, после чего отправляет данные. Выполнение завершается при получении данных `MPI_RECV`.
 
 Процедура НЕлокальная. Завершение зависит от получателя.
-
-```mermaid
-sequenceDiagram
-
-    box Отправитель
-        participant S as Процесс <br/> отправитель
-    end
-    
-    box Получатель
-        participant R as Процесс <br/> получатель
-    end
-
-    Note left of S: call MPI_SSEND
-    activate S
-    
-    Note right of R: Выполнение<br/>другого<br/>кода
-    Note left of S: Процесс ждёт
-
-    Note right of R: call MPI_RECV
-    activate R
-    S -->> R: Отправка данных
-    S -> R: Данные полностью<br/> приняты
-    deactivate R
-    
-    deactivate S
-    Note left of S: Продолжение<br/>выполнения<br/>кода
-
-    Note right of R: Продолжение<br/>выполнения<br/>кода
-
-```
 
 ### Буферизованная отправка
 Сообщение записываются в выделенный буфер на стороне отправителя независимо от инициализации приёма `MPI_RECV`. 
@@ -140,40 +51,6 @@ sequenceDiagram
 
 Необходимо выделить буфер с помощью `MPI_BUFFER_ATTACH`.
 
-```mermaid
-sequenceDiagram
-
-    box Отправитель
-        participant S as Процесс <br/> отправитель
-        participant B as Буфер на стороне<br/>отправителя
-    end
-    
-    box Получатель
-        participant R as Процесс <br/> получатель
-    end
-
-    Note left of S: call MPI_BUFFER_ATTACH
-    activate B
-    Note left of S: call MPI_BSEND 
-    activate S
-    S -->> B: Отправка данных
-    S -> B: Данные полностью <br/>скопированы в буфер
-    deactivate S   
-    Note left of S: Продолжение<br/>выполнения<br/>кода
-
-    Note right of R: Выполнение<br/>другого<br/>кода
-    Note right of R: call MPI_RECV
-    activate R
-    B -->> R: Отправка данных
-    B -> R: Данные полностью приняты
-    deactivate R
-    Note right of R: Продолжение<br/>выполнения<br/>кода
-
-    Note left of S: call MPI_BUFFER_DETACH
-    deactivate B
-
-```
-
 ### Отправка по готовности
 Можно использовать только после инициализации приёма `MPI_RECV`. Отправляет сообщение напрямую. Сокращает протокол взаимодействия между отправителем и получателем.
 
@@ -181,33 +58,6 @@ sequenceDiagram
 
 Необходимо дополнительно гарантировать предварительную инициализацию приёма, например явно с помощью `MPI_BARRIER` или неявно `MPI_SSEND`.
 
-```mermaid
-sequenceDiagram
-
-    box Отправитель
-        participant S as Процесс <br/> отправитель
-    end
-    
-    box Получатель
-        participant R as Процесс <br/> получатель
-    end
-
-
-    Note right of R: call MPI_RECV
-    activate R
-
-    Note left of S: Выполнение<br/>другого<br/>кода
-    Note right of R: Процесс ждёт
-    Note left of S: call MPI_RSEND 
-    activate S
-    S -->> R: Отправка данных
-    S -> R: Данные полностью<br/> приняты
-    deactivate S
-    deactivate R
-    Note left of S: Продолжение<br/>выполнения<br/>кода
-    Note right of R: Продолжение<br/>выполнения<br/>кода
-
-```
 
 ## Синтаксис процедур отправки
 
