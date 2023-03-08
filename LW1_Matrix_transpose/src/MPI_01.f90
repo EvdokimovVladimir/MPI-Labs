@@ -1,99 +1,117 @@
-program hello
+program matrixTranspose
 
     implicit none
     include "mpif.h"
-    integer :: n, m, i, j, stat(MPI_STATUS_SIZE)
-    real, allocatable :: matr(:,:), temp(:,:)
-    
+
+    integer :: rows, columns, i, j, status(MPI_STATUS_SIZE)
+    real, allocatable :: matrix(:, :)
     integer :: err, nproc, myID
+
+    ! инициализация MPI
     call MPI_INIT(err)
     call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, err)
     call MPI_COMM_RANK(MPI_COMM_WORLD, myID, err)
+
+    if (nproc /= 4 .AND. myID == 0) then
+        write(*, *) "Программа работает только с 4 потоками"
+        call MPI_ABORT(MPI_COMM_WORLD, err)
+    end if
     
+    ! чтение матрицы
     if(myID == 0) then
-	open(0,file='A')
-        read(0,*)n
-	read(0,*)m
+    
+	    open(0, file='A')
+        read(0, *) rows
+	    read(0, *) columns
 
-        allocate(matr(n,m))
+        allocate(matrix(rows, columns))
 
-	do i = 1,n
-	    read(0,*)(matr(i,j), j = 1,m)
+	    do i = 1, rows
+	        read(0, *) (matrix(i, j), j = 1, columns)
         end do
 
-	write(*,*)"Initial matrix"
-	call printmatr(matr, n, m, myID)
+	    write(*, *) "Исходная матрица"
+        call printMatrix(matrix, rows, columns)
 
-	n = n / 2
-	m = m / 2
+        ! если размеры матрицы не чётные будет лажа)
+        rows = rows / 2
+        columns = columns / 2
     endif
 
-    call MPI_BCAST(n, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, err)
-    call MPI_BCAST(m, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, err)
+    ! рассылка размерности матрицы
+    call MPI_BCAST(rows,    1, MPI_INTEGER, 0, MPI_COMM_WORLD, err)
+    call MPI_BCAST(columns, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, err)
+    
+    if(myID == 0) then
+        ! рассылка фрагментов матрицы
+        call MPI_SEND(matrix(1:rows,        columns+1:2*columns), rows*columns, MPI_REAL, 1, 0, MPI_COMM_WORLD, err)
+        call MPI_SEND(matrix(rows+1:2*rows, 1:columns),           rows*columns, MPI_REAL, 2, 0, MPI_COMM_WORLD, err)
+        call MPI_SEND(matrix(rows+1:2*rows, columns+1:2*columns), rows*columns, MPI_REAL, 3, 0, MPI_COMM_WORLD, err)
+	
+        ! транспонирование фрагмента матрицы
+        call transposeMatrix(matrix(1:rows, 1:columns), rows, columns)
+
+    else
+        allocate(matrix(rows,columns))
+
+        ! приём фрагмента матрицы, транспонирование и отправка обратно
+        call MPI_RECV(matrix, rows*columns, MPI_REAL, 0, 0, MPI_COMM_WORLD, status, err)
+        call transposeMatrix(matrix, rows, columns)
+        call MPI_SEND(matrix, rows*columns, MPI_REAL, 0, 0, MPI_COMM_WORLD, err)
+
+        deallocate(matrix)
+    endif
 
     if(myID == 0) then
-	
-	call MPI_SEND(matr(1:n, m+1:2*m), n*m, MPI_REAL, 1, 0, MPI_COMM_WORLD, err)
-	call MPI_SEND(matr(n+1:2*n, 1:m), n*m, MPI_REAL, 2, 0, MPI_COMM_WORLD, err)
-	call MPI_SEND(matr(n+1:2*n, m+1:2*m), n*m, MPI_REAL, 3, 0, MPI_COMM_WORLD, err)
-	
-    elseif(myID <= 3) then
-	allocate(matr(n,m))
 
-	call MPI_RECV(matr, n*m, MPI_REAL, 0, 0, MPI_COMM_WORLD, stat, err)
-	call transpose(matr, n, m)
+        ! приём и сборка транспонированной матрицы
+        call MPI_RECV(matrix(rows+1:2*rows, 1:columns          ), rows*columns, MPI_REAL, 1, 0, MPI_COMM_WORLD, status, err)
+        call MPI_RECV(matrix(1:rows,        columns+1:2*columns), rows*columns, MPI_REAL, 2, 0, MPI_COMM_WORLD, status, err)
+        call MPI_RECV(matrix(rows+1:2*rows, columns+1:2*columns), rows*columns, MPI_REAL, 3, 0, MPI_COMM_WORLD, status, err)
+        
+        write(*, *) "Транспонированная матрица"
+        call printMatrix(matrix, 2*rows, 2*columns)
+
+        deallocate(matrix)  
     endif
 
-    if(myID == 0) then
-	call MPI_RECV(matr(n+1:2*n, 1:m), n*m, MPI_REAL, 1, 0, MPI_COMM_WORLD, stat,  err)
-	call MPI_RECV(matr(1:n, m+1:2*m), m*m, MPI_REAL, 2, 0, MPI_COMM_WORLD, stat, err)
-	call MPI_RECV(matr(n+1:2*n, m+1:2*m), n*m, MPI_REAL, 3, 0, MPI_COMM_WORLD, stat, err)
-	
-	allocate(temp(n, m))
-	temp = matr(1:n, 1:m)
-	call transpose(temp, n, m)
-	matr(1:n, 1:m) = temp
-	
-	write(*,*)"Transposed matrix"
-	call printmatr(matr, 2*n, 2*m, myID)
-    else if (myID <= 3) then
-	call MPI_SEND(matr, m*m, MPI_REAL, 0, 0, MPI_COMM_WORLD, err)
-    endif
+    call MPI_FINALIZE(err)
     
-    
-    deallocate(matr)
-end program hello
+end program matrixTranspose
 
-subroutine printmatr(matr, n, m, myID)
+
+
+subroutine printMatrix(matr, rows, columns)
+
     implicit none
-    integer :: n, m, i, j, myID
-    real :: matr(n, m)
+    integer, intent(in) :: columns, rows
+    real, intent(in) :: matr(rows, columns)
 
-    do i = 1,n
-	write(*,'(a,i4,100f6.2)')'myID=', myID, (matr(i,j), j = 1,m)
+    integer :: i, j
+
+    do i = 1, rows
+	    write(*,'(100f6.2)')(matr(i, j), j = 1, columns)
     end do
 
-end subroutine printmatr
+end subroutine printMatrix
 
-subroutine transpose(matr, n, m)
+
+subroutine transposeMatrix(matr, rows, columns)
+
     implicit none
-    integer :: n, m, i, j
-    real :: matr(n, m)
+    integer, intent(in) :: rows, columns
+    real, intent(inout) :: matr(rows, columns)
+
+    integer :: i, j
     real :: tmp
 
-    do i = 1,n
-	do j = i+1,m
-	    tmp = matr(i, j)
-	    matr(i, j) = matr(j, i)
-	    matr(j, i) = tmp
-	
-	end do
+    do i = 1, rows
+        do j = (i + 1), columns
+            tmp = matr(i, j)
+            matr(i, j) = matr(j, i)
+            matr(j, i) = tmp
+        end do
     end do
 
-end subroutine transpose
-
-
-
-
-
+end subroutine transposeMatrix
 
