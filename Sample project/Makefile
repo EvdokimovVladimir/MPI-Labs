@@ -5,7 +5,7 @@
 # Compiler settings - Can be customized.  -Wall -Wextra -Wshadow -pedantic
 CC = mpif90
 CPP = mpif90 -cpp
-CXXFLAGS = -g -O0 -ffree-line-length-none
+CXXFLAGS = -g -O0 -ffree-line-length-none -cpp
 LDFLAGS = 
 
 # Makefile settings - Can be customized.
