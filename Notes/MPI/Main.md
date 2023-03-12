@@ -6,8 +6,8 @@ program sample
 
     ! MPI variables
     integer :: err      ! error signal variable
-	integer :: myID		! process ID
-	integer :: nprocs	! number of processes
+    integer :: myID		! process ID
+    integer :: nprocs	! number of processes
     
     ! initialization of MPI
     call MPI_INIT(err)
