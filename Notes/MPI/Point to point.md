@@ -1,18 +1,5 @@
 # Передача сообщений точка-точка
 
-## Типы данных
-
-|          MPI           |           Fortran            |
-| :--------------------: | :--------------------------: |
-|     `MPI_INTEGER`      |          `INTEGER`           |
-|       `MPI_REAL`       |            `REAL`            |
-| `MPI_DOUBLE_PRECISION` |      `DOUBLE PRECISION`      |
-|     `MPI_COMPLEX`      |          `COMPLEX`           |
-|     `MPI_LOGICAL`      |          `LOGICAL`           |
-|    `MPI_CHARACTER`     |        `CHARACTER(1)`        |
-|       `MPI_BYTE`       | 8 бит, для не типизированных |
-|      `MPI_PACKED`      |       для упакованных        |
-
 ## Типы сообщений
 
 | Режим  выполнения            | С блокировкой | Без блокировки |

@@ -22,6 +22,20 @@ program sample
 end program sample
 ```
 
+# Типы данных
+
+|          MPI           |           Fortran            |
+| :--------------------: | :--------------------------: |
+|     `MPI_INTEGER`      |          `INTEGER`           |
+|       `MPI_REAL`       |            `REAL`            |
+| `MPI_DOUBLE_PRECISION` |      `DOUBLE PRECISION`      |
+|     `MPI_COMPLEX`      |          `COMPLEX`           |
+|     `MPI_LOGICAL`      |          `LOGICAL`           |
+|    `MPI_CHARACTER`     |        `CHARACTER(1)`        |
+|       `MPI_BYTE`       | 8 бит, для не типизированных |
+|      `MPI_PACKED`      |       для упакованных        |
+
+
 # Процедуры общего назначения
 
 `MPI_COMM_WORLD` —— глобальный коммуникатор
