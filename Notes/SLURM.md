@@ -11,7 +11,6 @@ sinfo -s
 
 ```bash
 scontrol show node hobbit[01]   # информация о ноде
-scontrol show hobbits           # информация об очереди
 scontrol show job 123456        # информация о задаче
 ```
 
