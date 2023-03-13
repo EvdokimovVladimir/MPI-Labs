@@ -8,8 +8,11 @@ program PiSeries
 
     integer :: err, nproc, myID
     integer :: prescPow
-    integer(kind = 16) :: i
-    double precision :: temp, myPi, presc, Pi
+    integer(kind = 16) :: iterations, i
+    real(kind = 16) :: temp, myPi
+    real(kind = 16), allocatable :: myPis(:)
+    double precision :: time
+    character(len = 12) :: fmt
 
 #ifdef DEBUG
     integer(kind = 16) :: iteration
@@ -19,45 +22,38 @@ program PiSeries
     call MPI_INIT(err)
     call MPI_COMM_SIZE(MPI_COMM_WORLD, nproc, err)
     call MPI_COMM_RANK(MPI_COMM_WORLD, myID, err)
+    allocate(myPis(nproc))
 
     ! input precision
     if (myID == 0) then
-        write(*, *) "Enter minus decimal log of precision (10^-n)"
-        read(*, *) prescPow
-        presc = 10.d0 ** (-prescPow) / 4
-
+        write(*, *) "Enter decimal log of number of iterations per process"
+        write(*, "(a, i3)") "Max: ", floor(log10(1.d0 * huge(iterations)))
+        read(*, *) iterations
+        iterations = 10 ** iterations
 #ifdef DEBUG
-        write(*, "(a12, es8.1)") "Precision = ", presc
-#endif   
+        write(*, "(a, i38)") "Iterations: ", iterations
+#endif 
+        time = MPI_WTIME(err)
     end if
 
-    ! broadcasting precision
-    call MPI_BCAST(presc, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, err)
+    ! iterations are integer(kind = 16)
+    ! there is no native support in MPI for 16 byte integer(
+    call MPI_BCAST(iterations, 16, MPI_BYTE, 0, MPI_COMM_WORLD, err)
 
     ! calculating pi
-    temp = huge(temp)
     myPi = 0
-    i = myID
 
-    do while(abs(temp) > presc)
+    do i = myID, iterations, nproc
         ! as in Taylor series
         temp = (-1.d0) ** i / (2.d0 * i + 1.d0)
         myPi = myPi + temp
-
-        ! checking for overflowing
-        if (i >= (huge(i) - nproc)) then
-            write(*, "(a, i2, a)") "ID:", myID, ", i overflow"
-            exit
-        end if
-
-        i = i + nproc
 
 #ifdef DEBUG
         ! debuging every 10 000 iterations
         iteration = (i - myId) / nproc
 
         if (mod(iteration, 10000) == 0) then
-            write(*, "(a, i2, a, i8, a, es8.1)") "ID:", myID, ", iteration = ", iteration, ", part = ", temp
+            write(*, "(a, i2, a, i8, a, es8.1)") "ID:", myID, ", iteration = ", i, ", part = ", temp
         end if
 #endif     
     end do
@@ -67,12 +63,25 @@ program PiSeries
 #endif
     
     ! collecting data
-    call MPI_REDUCE(myPi, Pi, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD, err)
-    Pi = Pi * 4
+    ! myPi are integer(kind = 16)
+    ! there is no native support in MPI for 16 byte integer(
+    call MPI_GATHER(myPi, 16, MPI_BYTE, myPis, 16, MPI_BYTE, 0, MPI_COMM_WORLD, err)
 
     ! writting the answer
     if (myID == 0) then
-        write(*, "(a, f0.50)") "Pi = ", Pi
+        
+        ! calculating main sum
+        do i = 2, nproc
+            myPi = myPi + myPis(i)
+        end do
+
+        myPi = 4.d0 * myPi
+
+        write(fmt, "(a, i0, a)") "(a, f0.", int(-log10(abs(temp))), ")"
+        write(*, fmt) "Pi = ", myPi
+
+        time = MPI_WTIME(err) - time
+        write(*, "(a, f0.9, a, f0.9)") "Time = ", time, " s +- ", MPI_WTICK(err)
     end if
 
     call MPI_FINALIZE(err)
