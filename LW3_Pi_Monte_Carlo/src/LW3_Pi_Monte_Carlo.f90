@@ -8,12 +8,14 @@ program PiMonteCarlo
 
     ! MPI
     integer :: err, nproc, myId
+    double precision :: time
 
     ! calcuating
     integer(kind = 16) :: iterations, i, myPi
     integer(kind = 16), allocatable :: myPis(:)
     double precision :: coord(2)
     double precision :: Pi
+    character(len = 12) :: fmt
 
     ! random
     integer :: istat
@@ -59,6 +61,8 @@ program PiMonteCarlo
     call MPI_SCATTER(seeds, seedLen, MPI_INTEGER, seed, seedLen, MPI_INTEGER, 0, MPI_COMM_WORLD, err)
     call random_seed(put = seed)
 
+    time = MPI_WTIME(err)
+
 #ifdef DEBUG
     ! seeds debug
     write(*, "(a, i2, a, 8i12)") "ID: ", myID, ", seed =", seed
@@ -91,8 +95,11 @@ program PiMonteCarlo
         Pi = 4.d0 * myPi / iterations / nproc
 
         ! writting the answer
-        ! just 8 didits)
-        write(*, "(a, f0.8)") "Pi = ", Pi
+        write(fmt, "(a, i0, a)") "(a, f0.", int(log10(1.d0 * iterations) - 3), ")"
+        write(*, fmt) "Pi = ", Pi
+        
+        time = MPI_WTIME(err) - time
+        write(*, "(a, f0.6, a, f0.6, a)") "Time = ", time, " +- ", MPI_WTICK(err), " s"
     end if
 
     call MPI_FINALIZE(err)
