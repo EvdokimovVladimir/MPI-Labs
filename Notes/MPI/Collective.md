@@ -11,7 +11,7 @@ call MPI_BARRIER(comm, err)
 ## Широкое распространение (один-всем)
 
 ```fortran
-<type> buf                  ! буфер, из которого будут отправлены данные
+<type> :: buf               ! буфер, из которого будут отправлены данные
 integer :: count            ! количество данных в единицах mpi_datatype
 integer :: mpi_datatype     ! тип отправляемых данных
 integer :: rootID           ! ID рассылателя
@@ -28,14 +28,14 @@ call MPI_BCAST(buf, count, mpi_datatype, rootID, comm, err)
 Для `MPI_SCATTERV`: данные длиной `counts(ID+1)` из `bufSend(displacements(ID+1))` будут отправлены процессу `ID`.
 
 ```fortran
-<type> bufSend(*)                   ! буфер, из которого будут отправлены данные
+<type> :: bufSend(*)                ! буфер, из которого будут отправлены данные
 integer :: countSend                ! количество отправляемых данных в единицах mpi_datatypeSend
 integer :: mpi_datatypeSend         ! тип отправляемых данных
 
 integer :: counts(*)                ! массив с количеством отправляемых данных каждому процессу
 integer :: displacements(*)         ! массив со смещениями относительно начала bufSend
 
-<type> bufRecv                      ! (output) буфер, куда будут приняты данные
+<type> :: bufRecv                   ! (output) буфер, куда будут приняты данные
 integer :: countRecv                ! количество принимаемых данных в единицах mpi_datatypeRecv
 integer :: mpi_datatypeRecv         ! тип принимаемых данных
 
@@ -60,11 +60,11 @@ rootID, comm, err)
 Для `MPI_GATHERV`: данные длиной `counts(ID+1)`, отправленные процессом `ID`, будут получены в `bufRecv(displacements(ID+1))`.
 
 ```fortran
-<type> bufSend                      ! буфер, из которого будут отправлены данные
+<type> :: bufSend                   ! буфер, из которого будут отправлены данные
 integer :: countSend                ! количество отправляемых данных в единицах mpi_datatypeSend
 integer :: mpi_datatypeSend         ! тип отправляемых данных
 
-<type> bufRecv(*)                   ! (output) буфер, куда будут приняты данные
+<type> :: bufRecv(*)                ! (output) буфер, куда будут приняты данные
 integer :: countRecv                ! количество принимаемых данных в единицах mpi_datatypeRecv
 integer :: mpi_datatypeRecv         ! тип принимаемых данных
 
@@ -93,11 +93,11 @@ rootID, comm, err)
 Для `MPI_ALLGATHERV`: данные длиной `counts(ID+1)`, отправленные процессом `ID`, будут получены в `bufRecv(displacements(ID+1))`.
 
 ```fortran
-<type> bufSend                      ! буфер, из которого будут отправлены данные
+<type> :: bufSend                   ! буфер, из которого будут отправлены данные
 integer :: countSend                ! количество отправляемых данных в единицах mpi_datatypeSend
 integer :: mpi_datatypeSend         ! тип отправляемых данных
 
-<type> bufRecv(*)                   ! (output) буфер, куда будут приняты данные
+<type> :: bufRecv(*)                ! (output) буфер, куда будут приняты данные
 integer :: countRecv                ! количество принимаемых данных в единицах mpi_datatypeRecv
 integer :: mpi_datatypeRecv         ! тип принимаемых данных
 
@@ -121,14 +121,14 @@ comm, err)
 `ID:bufSend(ID2+1) -> ID2:bufRecv(ID+1)`
 
 ```fortran
-<type> bufSend                      ! буфер, из которого будут отправлены данные
+<type> :: bufSend                   ! буфер, из которого будут отправлены данные
 integer :: countSend                ! количество отправляемых данных в единицах mpi_datatypeSend
 integer :: mpi_datatypeSend         ! тип отправляемых данных
 
 integer :: countsSend(*)            ! массив с количеством отправляемых данных каждому процессу
 integer :: displacementsSend(*)     ! массив со смещениями относительно начала bufSend
 
-<type> bufRecv(*)                   ! (output) буфер, куда будут приняты данные
+<type> :: bufRecv(*)                ! (output) буфер, куда будут приняты данные
 integer :: countRecv                ! количество принимаемых данных в единицах mpi_datatypeRecv
 integer :: mpi_datatypeRecv         ! тип принимаемых данных
 
