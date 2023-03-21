@@ -1,55 +1,76 @@
 #!/usr/bin/bash
 # Script for transfering source files to remote host,
 # compiling and running
-
-# T - launching on virtual Ubuntu
-# F - launching on IPM cluster
-ISLOCAL=T
+# -l — on local machine
+# -v — on virtual machine
+# -c — on cluster
 
 # working dir with Makefile and src folder
-WORKINGDIR=LW3_Pi_Monte_Carlo
+WORKINGDIR=LW4_Matrix_Multiplication
 
 # login information
-if [[ $ISLOCAL = "T" ]]; then
+case "$1" in
+-v) 
     USERNAME=vladimir
-    HOSTNAME=vm-ubuntu
-else
+    HOSTNAME=vm-ubuntu.local ;;
+-c) 
     USERNAME=studentmpi
-    HOSTNAME=greywizard
-fi
+    HOSTNAME=192.168.20.4 ;;
+    #HOSTNAME=greywizard
+esac
+
 
 # temp dir which will be created on remote host
-if [[ $ISLOCAL = "T" ]]; then
-    TARGETDIR=/tmp/EVV
-else
-    TARGETDIR=~/work/Evdokimov
-fi
+case "$1" in
+-v) 
+    TARGETDIR="/tmp/EVV" ;;
+-c) 
+    TARGETDIR="~/work/Evdokimov" ;;
+esac
+
 # makefile for compiling on remote host
 MAKEFILE=Makefile
 # name of compiled file according to makefile
 COMPILEDFILE=a.out
 
 # mpirun or srun
-if [[ $ISLOCAL = "T" ]]; then
+
+if [ "$1" = "-c" ] 
+then 
+    MPIRUNNER=srun
+    MPIRUNNER_ARGS="-n 4 -p hobbits"
+else
     MPIRUNNER=mpirun
     MPIRUNNER_ARGS="-n 4"
-else
-    MPIRUNNER=srun
-    MPIRUNNER_ARGS="-n 16 -p hobbits"
 fi
 
 # ==============================================================
-# removing temp dir if exists
-ssh $USERNAME@$HOSTNAME "\[ -d $TARGETDIR \] && rm -fr $TARGETDIR"
+if [[ ("$1" = "-v") || ("$1" = "-c")]]
+then 
+    # removing temp dir if exists
+    ssh $USERNAME@$HOSTNAME "\[ -d $TARGETDIR \] && rm -fr $TARGETDIR"
 
-# creatng temp dir
-ssh $USERNAME@$HOSTNAME mkdir $TARGETDIR
+    # creatng temp dir
+    ssh $USERNAME@$HOSTNAME mkdir $TARGETDIR
 
-# sending source files and Makefile
-scp -r $WORKINGDIR/. $USERNAME@$HOSTNAME:$TARGETDIR
+    # sending source files and Makefile
+    scp -r $WORKINGDIR/. $USERNAME@$HOSTNAME:$TARGETDIR
+fi
 
-# compiling and running files, deleting temp dir
-ssh $USERNAME@$HOSTNAME "cd $TARGETDIR; make; $MPIRUNNER $MPIRUNNER_ARGS ./$COMPILEDFILE"
+if [[ ("$1" = "-l") || ("$1" = "")]]
+then 
+    # changing dir
+    cd $WORKINGDIR
 
-# removing temp dir
-ssh $USERNAME@$HOSTNAME "rm -rf $TARGETDIR"
+    # compiling
+    make
+
+    # running
+    $MPIRUNNER $MPIRUNNER_ARGS ./$COMPILEDFILE
+else
+    # compiling and running files, deleting temp dir
+    ssh $USERNAME@$HOSTNAME "cd $TARGETDIR; make; $MPIRUNNER $MPIRUNNER_ARGS ./$COMPILEDFILE"
+
+    # removing temp dir
+    ssh $USERNAME@$HOSTNAME "rm -rf $TARGETDIR"
+fi
