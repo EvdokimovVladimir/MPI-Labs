@@ -1,6 +1,6 @@
 
 !define DEBUG
-!#define MATRIX_B_CUT
+#define MATRIX_B_CUT
 
 program MatrixMultiplication
 
@@ -203,7 +203,10 @@ program MatrixMultiplication
     end do
 #endif  
 
-    ! sending # of columns of B
+    ! free memory
+    if (myId == rootId) then
+        deallocate(matrixA, matrixB)
+    end if
 
     allocate(localC(columnsB, countA))
     localC = 0
@@ -303,6 +306,9 @@ program MatrixMultiplication
                     matrixC, countsA * columnsB, displacementsC, MPI_REAL, &
                     rootId, MPI_COMM_WORLD, err)
 
+    ! free memory
+    deallocate(localA, localB, localC)
+
     if (myID == rootId) then       
         ! writting the answer
         call transposeMatrix(matrixC)
@@ -313,7 +319,13 @@ program MatrixMultiplication
         ! writting execution time
         time = MPI_WTIME(err) - time
         write(*, "(a, f0.6, a, f0.6, a)") "Time = ", time, " +- ", MPI_WTICK(err), " s"
+
+        deallocate(matrixC)
     end if
+
+    ! free memory
+    deallocate(countsB, countsA)
+    deallocate(displacementsA, displacementsB, displacementsC)
 
     call MPI_FINALIZE(err)
     
