@@ -1,6 +1,6 @@
 
-#define DEBUG
-#define MATRIX_B_CUT
+!define DEBUG
+!#define MATRIX_B_CUT
 
 program MatrixMultiplication
 
@@ -19,7 +19,7 @@ program MatrixMultiplication
     ! numbers of columns or rows per process
     integer, allocatable :: countsA(:), countsB(:)
     ! displacements for MPI_SCATTERV
-    integer, allocatable :: displacementsA(:), displacementsB(:)
+    integer, allocatable :: displacementsA(:), displacementsB(:), displacementsC(:)
 
     ! main matrixes
     real, allocatable :: matrixA(:, :), matrixB(:, :), matrixC(:, :)
@@ -47,7 +47,7 @@ program MatrixMultiplication
     
     ! for MPI_SCATTERV
     allocate(countsB(nproc), countsA(nproc))
-    allocate(displacementsA(nproc), displacementsB(nproc))
+    allocate(displacementsA(nproc), displacementsB(nproc), displacementsC(nproc))
 
 ! ===============================================================
 !       READING MATRIXES FROM FILE
@@ -59,6 +59,8 @@ program MatrixMultiplication
         
         write(*, *) "Matrix A:"
         call printMatrix(matrixA)
+        rowsA = size(matrixA, 1)
+        columnsA = size(matrixA, 2)
 
         ! transposing for sending and optimization
         call transposeMatrix(matrixA)
@@ -86,22 +88,29 @@ program MatrixMultiplication
         call printMatrix(matrixB)
 #endif
 #endif
+        rowsB = size(matrixB, 1)
+        columnsB = size(matrixB, 2)
+
+#ifdef DEBUG
+        write(*, *) "size matrixA", rowsA, columnsA
+        write(*, *) "size matrixB", rowsB, columnsB
+#endif
         !  impossible multiplication
-        if (size(matrixA, 1) /= size(matrixB, 1)) then
+        if (columnsA /= rowsB) then
             write(*, *) "# of colunms of A should be equal # of rows of B"
-            write(*, *) "# of columns of A:", size(matrixA, 1), ", # of rows of B:", size(matrixB, 1)
+            write(*, *) "# of columns of A:", columnsA, ", # of rows of B:", rowsB
             call MPI_ABORT(MPI_COMM_WORLD, err)
         end if
 
         ! dividing matrix into processes and preparing for MPI_SCATTERV
-        countsA = size(matrixA, 1) / nproc
-        countsB = size(matrixB, 2) / nproc
+        countsA = rowsA / nproc
+        countsB = columnsB / nproc
 
-        do i = 1, mod(size(matrixA, 1), nproc)
+        do i = 1, mod(rowsA, nproc)
             countsA(i) = countsA(i) + 1
         end do
 
-        do i = 1, mod(size(matrixB, 2), nproc)
+        do i = 1, mod(columnsB, nproc)
             countsB(i) = countsB(i) + 1
         end do
 
@@ -110,20 +119,22 @@ program MatrixMultiplication
         write(*, *) "countsB = ", countsB
 #endif
 
-        internalSize = size(matrixB, 1)
+        internalSize = columnsA
 
         displacementsA(1) = 0
         displacementsB(1) = 0
+        displacementsC(1) = 0
         do i = 2, nproc
             displacementsA(i) = displacementsA(i-1) + internalSize * countsA(i-1)
             displacementsB(i) = displacementsB(i-1) + internalSize * countsB(i-1)
+            displacementsC(i) = displacementsC(i-1) + columnsB * countsA(i-1)
         end do
         
 #ifdef DEBUG
         write(*, *) "displacementsA = ", displacementsA
         write(*, *) "displacementsB = ", displacementsB
 #endif
-        allocate(matrixC(size(matrixA, 1), size(matrixB, 2)))
+        allocate(matrixC(columnsB, rowsA))
     end if
 
 ! ===============================================================
@@ -168,10 +179,11 @@ program MatrixMultiplication
 
     ! sending # of columns of B
     call MPI_BCAST(countsB, nproc, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
+    call MPI_BCAST(columnsB, nproc, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
 #ifdef DEBUG
     call MPI_BARRIER(MPI_COMM_WORLD, err)
     if (myId == rootId) then
-        write(*, *) "Casted countsB"
+        write(*, *) "Casted countsB and columnsB", columnsB
     end if    
 #endif
 
@@ -191,7 +203,9 @@ program MatrixMultiplication
     end do
 #endif  
 
-    allocate(localC(internalSize, countA))
+    ! sending # of columns of B
+
+    allocate(localC(columnsB, countA))
     localC = 0
         
 ! ===============================================================
@@ -285,8 +299,8 @@ program MatrixMultiplication
 ! =============================================================== 
 
     ! gathering result on root
-    call MPI_GATHERV(localC, countA * internalSize, MPI_REAL, &
-                    matrixC, countsA * internalSize, displacementsA, MPI_REAL, &
+    call MPI_GATHERV(localC, countA * columnsB, MPI_REAL, &
+                    matrixC, countsA * columnsB, displacementsC, MPI_REAL, &
                     rootId, MPI_COMM_WORLD, err)
 
     if (myID == rootId) then       
