@@ -4,9 +4,9 @@
 
 program MatrixMultiplication
 
+    use mpi
     use utils
     implicit none
-    include "mpif.h"
 
     ! MPI
     integer :: err, nproc, myId
@@ -99,7 +99,7 @@ program MatrixMultiplication
         if (columnsA /= rowsB) then
             write(*, *) "# of colunms of A should be equal # of rows of B"
             write(*, *) "# of columns of A:", columnsA, ", # of rows of B:", rowsB
-            call MPI_ABORT(MPI_COMM_WORLD, err)
+            call MPI_ABORT(MPI_COMM_WORLD, 0, err)
         end if
 
         ! dividing matrix into processes and preparing for MPI_SCATTERV
@@ -141,7 +141,7 @@ program MatrixMultiplication
 !       SENDING DATA
 ! ===============================================================
 
-    time = MPI_WTIME(err)
+    time = MPI_WTIME()
     ! sending # of rows in parts of A
     call MPI_SCATTER(countsA, 1, MPI_INTEGER, &
                      countA, 1, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
@@ -317,8 +317,8 @@ program MatrixMultiplication
         call writeMatrixToFile(matrixC, "C")
         
         ! writting execution time
-        time = MPI_WTIME(err) - time
-        write(*, "(a, f0.6, a, f0.6, a)") "Time = ", time, " +- ", MPI_WTICK(err), " s"
+        time = MPI_WTIME() - time
+        write(*, "(a, f0.6, a, f0.6, a)") "Time = ", time, " +- ", MPI_WTICK(), " s"
 
         deallocate(matrixC)
     end if

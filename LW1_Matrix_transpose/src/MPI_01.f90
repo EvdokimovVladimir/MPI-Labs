@@ -1,7 +1,7 @@
 program matrixTranspose
 
+    use mpi
     implicit none
-    include "mpif.h"
 
     integer :: rows, columns, i, j, status(MPI_STATUS_SIZE)
     real, allocatable :: matrix(:, :)
@@ -14,23 +14,23 @@ program matrixTranspose
 
     if (nproc /= 4 .AND. myID == 0) then
         write(*, *) "Программа работает только с 4 потоками"
-        call MPI_ABORT(MPI_COMM_WORLD, err)
+        call MPI_ABORT(MPI_COMM_WORLD, 0, err)
     end if
     
     ! чтение матрицы
     if(myID == 0) then
     
-	    open(0, file='A')
+        open(0, file='A')
         read(0, *) rows
-	    read(0, *) columns
+        read(0, *) columns
 
         allocate(matrix(rows, columns))
 
-	    do i = 1, rows
-	        read(0, *) (matrix(i, j), j = 1, columns)
+        do i = 1, rows
+            read(0, *) (matrix(i, j), j = 1, columns)
         end do
 
-	    write(*, *) "Исходная матрица"
+        write(*, *) "Исходная матрица"
         call printMatrix(matrix, rows, columns)
 
         ! если размеры матрицы не чётные будет лажа)
@@ -90,7 +90,7 @@ subroutine printMatrix(matr, rows, columns)
     integer :: i, j
 
     do i = 1, rows
-	    write(*,'(100f6.2)')(matr(i, j), j = 1, columns)
+        write(*,'(100f6.2)')(matr(i, j), j = 1, columns)
     end do
 
 end subroutine printMatrix

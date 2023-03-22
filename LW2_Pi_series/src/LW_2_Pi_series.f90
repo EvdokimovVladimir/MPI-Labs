@@ -3,11 +3,10 @@
 
 program PiSeries
 
+    use mpi
     implicit none
-    include "mpif.h"
 
     integer :: err, nproc, myID
-    integer :: prescPow
     integer(kind = 16) :: iterations, i
     real(kind = 16) :: temp, myPi
     real(kind = 16), allocatable :: myPis(:)
@@ -27,13 +26,13 @@ program PiSeries
     ! input precision
     if (myID == 0) then
         write(*, *) "Enter decimal log of number of iterations per process"
-        write(*, "(a, i3)") "Max: ", floor(log10(1.d0 * huge(iterations)))
+        write(*, "(a, i3)") "Max: ", floor(log10(dble(huge(iterations))))
         read(*, *) iterations
         iterations = 10 ** iterations
 #ifdef DEBUG
         write(*, "(a, i38)") "Iterations: ", iterations
 #endif 
-        time = MPI_WTIME(err)
+        time = MPI_WTIME()
     end if
 
     ! iterations are integer(kind = 16)
@@ -45,7 +44,7 @@ program PiSeries
 
     do i = myID, iterations, nproc
         ! as in Taylor series
-        temp = (-1.d0) ** i / (2.d0 * i + 1.d0)
+        temp = (-1.d0) ** i / (2.d0 * dble(i) + 1.d0)
         myPi = myPi + temp
 
 #ifdef DEBUG
@@ -80,8 +79,8 @@ program PiSeries
         write(fmt, "(a, i0, a)") "(a, f0.", int(-log10(abs(temp))), ")"
         write(*, fmt) "Pi = ", myPi
 
-        time = MPI_WTIME(err) - time
-        write(*, "(a, f0.9, a, f0.9)") "Time = ", time, " s +- ", MPI_WTICK(err)
+        time = MPI_WTIME() - time
+        write(*, "(a, f0.9, a, f0.9)") "Time = ", time, " s +- ", MPI_WTICK()
     end if
 
     call MPI_FINALIZE(err)

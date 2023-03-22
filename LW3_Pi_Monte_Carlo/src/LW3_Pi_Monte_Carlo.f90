@@ -3,8 +3,8 @@
 
 program PiMonteCarlo
 
+    use mpi
     implicit none
-    include "mpif.h"
 
     ! MPI
     integer :: err, nproc, myId
@@ -31,7 +31,7 @@ program PiMonteCarlo
     ! input number of iterations
     if (myID == 0) then
         write(*, *) "Enter decimal log of number of iterations per process"
-        write(*, "(a, i3)") "Max: ", floor(log10(1.d0 * huge(iterations)))
+        write(*, "(a, i3)") "Max: ", floor(log10(dble(huge(iterations))))
         read(*, *) iterations
         iterations = 10 ** iterations
 #ifdef DEBUG
@@ -61,7 +61,7 @@ program PiMonteCarlo
     call MPI_SCATTER(seeds, seedLen, MPI_INTEGER, seed, seedLen, MPI_INTEGER, 0, MPI_COMM_WORLD, err)
     call random_seed(put = seed)
 
-    time = MPI_WTIME(err)
+    time = MPI_WTIME()
 
 #ifdef DEBUG
     ! seeds debug
@@ -92,14 +92,14 @@ program PiMonteCarlo
             myPi = myPi + myPis(i)
         end do
 
-        Pi = 4.d0 * myPi / iterations / nproc
+        Pi = 4.d0 * dble(myPi) / dble(iterations) / nproc
 
         ! writting the answer
-        write(fmt, "(a, i0, a)") "(a, f0.", int(log10(1.d0 * iterations) - 3), ")"
+        write(fmt, "(a, i0, a)") "(a, f0.", int(log10(dble(iterations)) - 3), ")"
         write(*, fmt) "Pi = ", Pi
         
-        time = MPI_WTIME(err) - time
-        write(*, "(a, f0.6, a, f0.6, a)") "Time = ", time, " +- ", MPI_WTICK(err), " s"
+        time = MPI_WTIME() - time
+        write(*, "(a, f0.6, a, f0.6, a)") "Time = ", time, " +- ", MPI_WTICK(), " s"
     end if
 
     call MPI_FINALIZE(err)
