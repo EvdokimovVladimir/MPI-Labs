@@ -1,4 +1,4 @@
-program sample
+program HelloWorld
     implicit none
     include "mpif.h"
 
@@ -17,4 +17,4 @@ program sample
     ! finalization of MPI
     call MPI_FINALIZE(err)
 
-end program sample
+end program HelloWorld
