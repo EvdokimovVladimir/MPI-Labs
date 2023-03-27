@@ -1,6 +1,6 @@
 
 !#define DEBUG
-#define MAX_ITERATIONS (10e6)
+#define MAX_ITERATIONS (10e3)
 #define EPS (1d-100)
 
 program SLAE_Jacoby
@@ -115,10 +115,10 @@ program SLAE_Jacoby
         
 #ifdef DEBUG
         write(*, *) "countsX"
-        call printVector(dble(countsX))
+        call printVector(dble(countsX), 0)
 
         write(*, *) "displacementsX"
-        call printVector(dble(displacementsX))
+        call printVector(dble(displacementsX), 0)
 #endif
     end if
 
@@ -168,7 +168,7 @@ program SLAE_Jacoby
         call MPI_BARRIER(MPI_COMM_WORLD, err)
         if (myId == i) then
             write(*, *) myId, "Scattered matrixB", size(localB)
-            call printVector(localB)
+            call printVector(localB, 2)
         end if
     end do
 #endif
@@ -223,7 +223,7 @@ program SLAE_Jacoby
         call MPI_BARRIER(MPI_COMM_WORLD, err)
         if (myId == rootId) then
             write(*, *) "errorNorm = ", errorNorm
-            call printVector(vectorX)
+            call printVector(vectorX, 2)
         end if
 #endif
 
@@ -256,7 +256,7 @@ program SLAE_Jacoby
         
         ! writting the answer
         write(*, *) "Answer: "
-        call printVector(vectorX)
+        call printVector(vectorX, 16)
         write(*, *) "Error:", errorNorm
         write(*, *) "Iterations:", iteration
         

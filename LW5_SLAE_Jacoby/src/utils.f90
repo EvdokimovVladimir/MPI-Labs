@@ -44,17 +44,18 @@ subroutine printMatrix(matrix)
 
 end subroutine printMatrix
 
-subroutine printVector(vector)
+subroutine printVector(vector, prec)
 
     implicit none
     double precision, intent(in) :: vector(:)
+    integer, intent(in) :: prec
     integer :: rows
     integer :: i
-    character(len = 10) :: fmt
+    character(len = 15) :: fmt
 
     rows = size(vector)
 
-    write(fmt, "(a, i0, a)") "(", rows, "f8.2)"
+    write(fmt, "(a, i0, a, i0, a, i0, a)") "(", rows, "f", prec + 6 , ".", prec, ")"
 
     write(*, fmt)(vector(i), i = 1, rows)
 
