@@ -6,7 +6,7 @@
 # -c — on cluster
 
 # working dir with Makefile and src folder
-WORKINGDIR=LW4_Matrix_Multiplication
+WORKINGDIR=LW5_SLAE_Jacoby
 
 # login information
 case "$1" in
@@ -15,8 +15,7 @@ case "$1" in
     HOSTNAME=vm-ubuntu.local ;;
 -c) 
     USERNAME=studentmpi
-    HOSTNAME=192.168.20.4 ;;
-    #HOSTNAME=greywizard
+    HOSTNAME=greywizard ;;
 esac
 
 
