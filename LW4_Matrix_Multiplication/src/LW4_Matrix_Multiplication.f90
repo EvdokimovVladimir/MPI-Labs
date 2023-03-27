@@ -1,5 +1,5 @@
 
-!define DEBUG
+!#define DEBUG
 #define MATRIX_B_CUT
 
 program MatrixMultiplication
@@ -142,28 +142,22 @@ program MatrixMultiplication
 ! ===============================================================
 
     time = MPI_WTIME()
-    ! sending # of rows in parts of A
-    call MPI_SCATTER(countsA, 1, MPI_INTEGER, &
-                     countA, 1, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
-
-#ifdef DEBUG
-    call MPI_BARRIER(MPI_COMM_WORLD, err)
-    if (myId == rootId) then
-        write(*, *) "Scattered countsA"
-    end if
-    write(*, *) myId, "countA = ", countA
-#endif
 
     ! sending internal size of A*B
     call MPI_BCAST(internalSize, 1, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
+    
+    ! sending for MPI_SCATTERV
     call MPI_BCAST(countsA, nproc, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
     call MPI_BCAST(displacementsA, nproc, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
+    countA = countsA(myId + 1)
 
 #ifdef DEBUG
     call MPI_BARRIER(MPI_COMM_WORLD, err)
     if (myId == rootId) then
         write(*, *) "Casted m"
+        write(*, *) "Scattered countsA"
     end if
+    write(*, *) myId, "countA = ", countA
 #endif
 
     ! sending parts of A
