@@ -47,7 +47,7 @@ program Random_Martix_Generate
     read(*, *) filename
 
     ! format for matrix
-    write(fmt, "(a, i0, a)") "(", columns, "f5.2)"
+    write(fmt, "(a, i0, a)") "(", columns, "f8.5)"
 
     ! WRITING FILE
     open(newunit = fileunit, file = filename, status = "replace")
