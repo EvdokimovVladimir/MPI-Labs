@@ -46,14 +46,20 @@ fi
 # ==============================================================
 if [[ ("$1" = "-v") || ("$1" = "-c")]]
 then 
+    # changing dir
+    cd $WORKINGDIR
+
+    # cleaning
+    make cleanWithApp
+    
     # removing temp dir if exists
     ssh $USERNAME@$HOSTNAME "\[ -d $TARGETDIR \] && rm -fr $TARGETDIR"
 
     # creatng temp dir
     ssh $USERNAME@$HOSTNAME mkdir $TARGETDIR
 
-    # sending source files and Makefile
-    scp -r $WORKINGDIR/. $USERNAME@$HOSTNAME:$TARGETDIR
+    # sending files
+    scp -r ./. $USERNAME@$HOSTNAME:$TARGETDIR
 fi
 
 if [[ ("$1" = "-l") || ("$1" = "")]]
