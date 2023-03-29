@@ -1,11 +1,12 @@
 program HelloWorld
+
+    use mpi
     implicit none
-    include "mpif.h"
 
     ! MPI variables
     integer :: err      ! error signal variable. Standard Value = 0
-	integer :: myID		! process ID (pid) / Number
-	integer :: nprocs	! number of processes
+    integer :: myID     ! process ID (pid) / Number
+    integer :: nprocs   ! number of processes
     
     ! initialization of MPI
     call MPI_INIT(err)
