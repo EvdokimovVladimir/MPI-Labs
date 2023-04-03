@@ -1,6 +1,5 @@
-
 !#define DEBUG
-#define MATRIX_B_CUT
+!#define MATRIX_B_CUT
 
 program MatrixMultiplication
 
@@ -46,7 +45,7 @@ program MatrixMultiplication
     call MPI_COMM_RANK(MPI_COMM_WORLD, myID, err)
     
     ! for MPI_SCATTERV
-    allocate(countsB(nproc), countsA(nproc))
+    allocate(countsA(nproc), countsB(nproc))
     allocate(displacementsA(nproc), displacementsB(nproc), displacementsC(nproc))
 
 ! ===============================================================
@@ -150,7 +149,7 @@ program MatrixMultiplication
     call MPI_BCAST(countsA, nproc, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
     call MPI_BCAST(displacementsA, nproc, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
     countA = countsA(myId + 1)
-
+    
 #ifdef DEBUG
     call MPI_BARRIER(MPI_COMM_WORLD, err)
     if (myId == rootId) then
@@ -164,6 +163,7 @@ program MatrixMultiplication
     allocate(localA(internalSize, countA))
     call MPI_SCATTERV(matrixA, internalSize * countsA, displacementsA, MPI_REAL, & 
                     localA, size(localA), MPI_REAL, rootId, MPI_COMM_WORLD, err)
+
 #ifdef DEBUG
     call MPI_BARRIER(MPI_COMM_WORLD, err)
     if (myId == rootId) then
@@ -173,7 +173,7 @@ program MatrixMultiplication
 
     ! sending # of columns of B
     call MPI_BCAST(countsB, nproc, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
-    call MPI_BCAST(columnsB, nproc, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
+    call MPI_BCAST(columnsB, 1, MPI_INTEGER, rootId, MPI_COMM_WORLD, err)
 #ifdef DEBUG
     call MPI_BARRIER(MPI_COMM_WORLD, err)
     if (myId == rootId) then
@@ -197,10 +197,6 @@ program MatrixMultiplication
     end do
 #endif  
 
-    ! free memory
-    if (myId == rootId) then
-        deallocate(matrixA, matrixB)
-    end if
 
     allocate(localC(columnsB, countA))
     localC = 0
