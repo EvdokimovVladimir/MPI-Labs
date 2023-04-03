@@ -1,6 +1,5 @@
-
 !#define DEBUG
-#define MAX_ITERATIONS (10e3)
+#define MAX_ITERATIONS (int(10e3))
 #define EPS (1d-100)
 
 program SLAE_Jacoby
@@ -188,9 +187,8 @@ program SLAE_Jacoby
     localX = 0
     vectorX = 0
 
-    iteration = 0
     ! Jacoby cycle
-    do
+    do iteration = 1, (MAX_ITERATIONS - 1)
         ! calculating new X's
         do row = 1, countX
 
@@ -228,13 +226,12 @@ program SLAE_Jacoby
 #endif
 
         ! exit condition
-        iteration = iteration + 1
         if ((isnan(errorNorm) .or. errorNorm > huge(errorNorm)) .and. (myId == rootId)) then
             write(*, *) "There is some bad numbers... Error = ", errorNorm
             call MPI_ABORT(MPI_COMM_WORLD, 0, err)
         end if
 
-        if (errorNorm <= EPS .or. iteration >= MAX_ITERATIONS) then
+        if (errorNorm <= EPS) then
             exit
         end if
     
