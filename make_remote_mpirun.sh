@@ -6,7 +6,7 @@
 # -c — on cluster
 
 # working dir with Makefile and src folder
-WORKINGDIR=LW5_SLAE_Jacoby
+WORKINGDIR=LW6_Laplace
 
 # login information
 case "$1" in
