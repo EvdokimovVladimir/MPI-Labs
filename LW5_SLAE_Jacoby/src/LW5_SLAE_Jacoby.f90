@@ -190,6 +190,7 @@ program SLAE_Jacoby
     ! Jacoby cycle
     do iteration = 1, (MAX_ITERATIONS - 1)
         ! calculating new X's
+        tmp = 0
         do row = 1, countX
 
             tmp = 0
@@ -199,13 +200,10 @@ program SLAE_Jacoby
             end do
 
             localX(row) = tmp - localB(row)
-            
-        end do
 
-        tmp = 0
-        ! calculating local part of error
-        do row = 1, countX
+            ! calculating local part of error
             tmp = tmp + (localX(row) - vectorX(displacementsX(myId + 1) + row)) ** 2
+            
         end do
 
         ! sending X
