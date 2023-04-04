@@ -9,35 +9,28 @@
 
 ### Уравнение Лапласа в различных формах
 
-$$ 
-\frac{\partial^2 u(x,y)}{\partial x^2} + 
-\frac{\partial^2 u(x,y)}{\partial y^2} = 0 \\
+$$ \frac{\partial^2 u(x,y)}{\partial x^2} + 
+\frac{\partial^2 u(x,y)}{\partial y^2} = 0 $$
 
-\partial_x^2 u(x,y) + \partial_y^2 u(x,y) = 0 \\
+$$ \partial_x^2 u(x,y) + \partial_y^2 u(x,y) = 0 $$
 
-\Delta u(x, y) = 0 
-$$
+$$ \Delta u(x, y) = 0 $$
 
 ### Вывод итеративной формулы
 
 $$ \begin{align*}
 \partial_x^2 u(x,y) \approx 
 \frac{u(x+h, y) - 2u(x,y) + u(x-h,y)}{h^2}  \\
-
 \partial_y^2 u(x,y) \approx 
 \frac{u(x, y+h) - 2u(x,y) + u(x,y-h)}{h^2} \\
 \end{align*} $$
 
-$$ 
-0 = \Delta u(x, y) \approx 
+$$ 0 = \Delta u(x, y) \approx 
 \frac{u(x+h, y) - 2u(x,y) + u(x-h,y)}{h^2} + 
-\frac{u(x, y+h) - 2u(x,y) + u(x,y-h)}{h^2}
-$$
+\frac{u(x, y+h) - 2u(x,y) + u(x,y-h)}{h^2} $$
 
-$$ 
-u(x+h, y) - 2u(x,y) + u(x-h,y) + 
-u(x, y+h) - 2u(x,y) + u(x,y-h) = 0
-$$
+$$ u(x+h, y) - 2u(x,y) + u(x-h,y) + 
+u(x, y+h) - 2u(x,y) + u(x,y-h) = 0 $$
 
 $$ u(x+h, y) + u(x-h,y) + u(x, y+h) + u(x,y-h) = 4u(x,y) $$
 
@@ -97,7 +90,7 @@ $$
 
 Изменение вектора берём по модулю: $| U^{\{i+1\}} - U^{\{i\}} | \leq eps$, где $|...|$ — евклидова норма:
 
-$$ |x| = \sum_{i=1}^{N} \sum_{j=1}^{M} (U_{ij})^2 $$
+$$ |U| = \sum_{i=1}^{N} \sum_{j=1}^{M} (U_{ij})^2 $$
 
 
 ## Файл с условиями
